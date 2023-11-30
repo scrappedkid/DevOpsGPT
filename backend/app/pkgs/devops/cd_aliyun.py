@@ -19,7 +19,7 @@ class CDAliyun(CDInterface):
         request.set_EipBandwidth(1)
         request.set_SecurityGroupId(serviceInfo["cd_security_group"])
         request.set_VSwitchId(serviceInfo["cd_subnet"])
-        
+
         container_definition = {
             "Name": serviceInfo["cd_container_name"],
             "Image": image,
@@ -27,9 +27,9 @@ class CDAliyun(CDInterface):
             "Memory": 1,
             'ImagePullPolicy': "Always"
         }
-        
+
         request.set_Containers([container_definition])
-        
+
         response = self.client.do_action_with_exception(request)
         response_json = json.loads(response)
         container_group_id = response_json["ContainerGroupId"]
@@ -43,7 +43,7 @@ class CDAliyun(CDInterface):
                 del_request = DeleteContainerGroupRequest.DeleteContainerGroupRequest()
                 del_request.set_ContainerGroupId(container_group_id)
                 self.client.do_action_with_exception(del_request)
-                return f'部署失败。Deployment failure', True
+                return '部署失败。Deployment failure', True
             times = times + 1
             try:
                 time.sleep(10)
@@ -56,9 +56,9 @@ class CDAliyun(CDInterface):
                 if status == 'Running':
                     break
             except Exception as e:
-                print(str(e))
+                print(e)
                 break
-        
+
         # 获取容器组的公网IP地址
         request = DescribeContainerGroupsRequest()
         request.set_ContainerGroupIds([container_group_id])
@@ -66,5 +66,5 @@ class CDAliyun(CDInterface):
         eci_info_json = json.loads(eci_info)
         print(eci_info)
         public_ip = eci_info_json['ContainerGroups'][0]['InternetIp']
-        
+
         return f'访问网址：http://{public_ip} （本环境仅供体验，1小时候将自动删除。This environment is for experience only and will be deleted after 1 hour）', True

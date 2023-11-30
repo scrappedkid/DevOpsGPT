@@ -26,23 +26,22 @@ class DevopsGitHub(DevopsInterface):
             response = requests.post(pipeline_url, json=data, headers=headers)
             print(response, flush=True)
 
-            if response.status_code == 204:
-                print("Pipeline triggered successfully.")
-                time.sleep(3)
-
-                # Get the most recent record
-                workflow_url = f"{ciURL}/repos/{repopath}/actions/workflows/{gitWorkflow}/runs"
-                response = requests.get(workflow_url, headers=headers)
-                #print(response.json())
-                if response.status_code == 200:
-                    runs = response.json()["workflow_runs"]
-                    for run in runs:
-                        run_id = run["id"]
-                        break
-
-                return "Get pipline status...", run_id, f"https://github.com/{repopath}/actions/runs/{run_id}", True
-            else:
+            if response.status_code != 204:
                 return f"Failed to trigger pipeline 【Please confirm that the code has been pushed】. giturl:{ciURL} repopath:{repopath} branch:{branch_name} gitWorkflow:{gitWorkflow}, Error: {str(e)}", 0, "", False
+            print("Pipeline triggered successfully.")
+            time.sleep(3)
+
+            # Get the most recent record
+            workflow_url = f"{ciURL}/repos/{repopath}/actions/workflows/{gitWorkflow}/runs"
+            response = requests.get(workflow_url, headers=headers)
+            #print(response.json())
+            if response.status_code == 200:
+                runs = response.json()["workflow_runs"]
+                for run in runs:
+                    run_id = run["id"]
+                    break
+
+            return "Get pipline status...", run_id, f"https://github.com/{repopath}/actions/runs/{run_id}", True
         except Exception as e:
             return f"Failed to trigger pipeline 【Please confirm that the code has been pushed】. giturl:{ciURL} repopath:{repopath} branch:{branch_name} gitWorkflow:{gitWorkflow}, Error: {str(e)}", 0, "", False
 
@@ -55,11 +54,11 @@ class DevopsGitHub(DevopsInterface):
                 "Accept": "application/vnd.github+json",
                 "X-GitHub-Api-Version": "2022-11-28"
             }
-            
+
             run_details_url = f"{ciURL}/repos/{repopath}/actions/runs/{run_id}"
             run_response = requests.get(run_details_url, headers=headers)
             print(run_response)
-            
+
             if run_response.status_code == 200:
                 print(run_response.json())
                 job_log_url = run_response.json()["jobs_url"]
@@ -68,7 +67,7 @@ class DevopsGitHub(DevopsInterface):
                 if run_details.status_code == 200:
                     # 获取阶段信息
                     jobs = run_details.json()["jobs"]
-                    
+
                     job_info = []
                     docker_image = ""
                     for job in jobs:
@@ -76,25 +75,35 @@ class DevopsGitHub(DevopsInterface):
                         if job["conclusion"] is None:
                                 job["conclusion"] = "none"
                                 job["completed_at"] = "none"
-                                
+
                         steps = ""
                         for step in job["steps"]:
                             if step["conclusion"] is None:
                                 step["conclusion"] = "none"
                             steps += step["name"]+"<br>"+step["conclusion"]+"<br><br>"
-                        
+
                         job_log = self.getPipelineJobLogs(repopath, run_id, job["id"], ciConfig)
                         img = parseDockerImage(job_log)
                         if len(img) > 1:
                             docker_image = img
 
-                        job_info.append({
-                            'job_id': job["id"],
-                            'job_name': job["name"],
-                            'status': "none" if job["status"]=="in_progress" else ("failed" if job["conclusion"]=="failure" else job["conclusion"]),
-                            'duration': "none" if job["status"]=="in_progress" else job["completed_at"],
-                            'log': steps + "<br><br>" + job_log
-                        })
+                        job_info.append(
+                            {
+                                'job_id': job["id"],
+                                'job_name': job["name"],
+                                'status': "none"
+                                if job["status"] == "in_progress"
+                                else (
+                                    "failed"
+                                    if job["conclusion"] == "failure"
+                                    else job["conclusion"]
+                                ),
+                                'duration': "none"
+                                if job["status"] == "in_progress"
+                                else job["completed_at"],
+                                'log': f"{steps}<br><br>{job_log}",
+                            }
+                        )
 
                     return list(reversed(job_info)), docker_image, True
             return f"Failed to get pipeline status for repo {repopath} and pipeline ID {run_id}, Error: {str(e)}", '', False
@@ -113,11 +122,10 @@ class DevopsGitHub(DevopsInterface):
             url = f"https://api.github.com/repos/{repopath}/actions/jobs/{job_id}/logs"
             response = requests.get(url, headers=headers)
 
-            if response.status_code == 200:
-                logs = response.text
-                return removeColorCodes(logs)
-            else:
+            if response.status_code != 200:
                 return f"Failed to get log for job {job_id} in repo {repopath}. Status code: {response.status_code}"
+            logs = response.text
+            return removeColorCodes(logs)
         except Exception as e:
             return f"Failed to get log for job {job_id} in repo {repopath}, Error: {str(e)}"
 
@@ -136,13 +144,7 @@ def parseDockerImage(input_str):
     # 定义正则表达式模式
     pattern = r'kuafuai_docker_image_pushed:(.+?)[&|\n]'
 
-    # 使用 re.search 来查找匹配项
-    match = re.search(pattern, input_str)
-
-    # 如果找到匹配项，则提取结果
-    if match:
-        result = match.group(1)
-        return result
-    else:
-        print("parseDockerImage: 未找到匹配项")
-        return ""
+    if match := re.search(pattern, input_str):
+        return match.group(1)
+    print("parseDockerImage: 未找到匹配项")
+    return ""

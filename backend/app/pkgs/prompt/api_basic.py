@@ -4,10 +4,7 @@ from app.pkgs.prompt.api_interface import ApiInterface
 class ApiBasic(ApiInterface):
     def clarifyAPI(self, requirementID, userPrompt, apiDoc):
         message, ctx, success = step1ApiDocTasks(userPrompt, apiDoc)
-        if success:
-            return step2GenApiDoc(message, ctx)
-        else:
-            return message, False
+        return step2GenApiDoc(message, ctx) if success else (message, False)
     
 def step2GenApiDoc(message, context):
     context.append({
@@ -27,7 +24,6 @@ Without any dialogue or explanation, just output the final API only."""})
     return message, success
 
 def step1ApiDocTasks(user_prompt, apiDoc):
-    context = []
     content = """As a senior full stack developer, Your task is to design the swagger API and add detailed business logic comments to the API. Now you need to think step-by-step based on the requirements document and the Existing API of the existing project, analyze what needs to be adjusted to meet the requirements, and break down the content into multiple subtasks, describing each subtask in as much detail as possible.
 
 Attention:
@@ -48,7 +44,7 @@ Existing API：
 ```
 """
 
-    context.append({"role": "system", "content": content})
+    context = [{"role": "system", "content": content}]
     message, total_tokens, success = chatCompletion(context, FAKE_API)
 
     return message, context, success

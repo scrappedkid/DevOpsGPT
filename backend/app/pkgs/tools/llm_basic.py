@@ -43,20 +43,20 @@ class LLMBase(LLMInterface):
         if MODE == "FAKE" and len(fackData) > 0:
             time.sleep(5)
             return fackData, True
-        
+
         print("chatGPT - message:", flush=True)
         print(context, flush=True)
         provider_data, key = get_next_api_key()
         if len(key) < 10:
             print(f"\n\033[91mError: The GPT_KEYS({key}) in env.yaml is incorrectly, please modify the configuration according to the configuration notes. \033[0m\n")
             exit(1)
-        
+
         openai.api_key = key
         openai.api_type = provider_data["api_type"]
         openai.api_base = provider_data["api_base"]
         openai.api_version = provider_data["api_version"]
         openai.proxy = None if provider_data["proxy"]=="None" else provider_data["proxy"]
-        print("chatGPT - get api key:"+openai.api_key, flush=True)
+        print(f"chatGPT - get api key:{openai.api_key}", flush=True)
         print(f"provider_data:{provider_data}")
 
         try:
@@ -70,7 +70,7 @@ class LLMBase(LLMInterface):
 
             response_text = response["choices"][0]["message"]["content"]
             total_tokens = response["usage"]["total_tokens"]
-            print("chatGPT - response_text:"+response_text, flush=True)
+            print(f"chatGPT - response_text:{response_text}", flush=True)
             return response_text, total_tokens, True
         except Exception as e:
             msg = "\nError: Failed to access GPT, please check whether your network can connect to GPT and terminal proxy is running properly.\n"

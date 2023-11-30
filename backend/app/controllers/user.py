@@ -20,46 +20,45 @@ bp = Blueprint('user', __name__, url_prefix='/user')
 def register():
     _ = getI18n("controllers")
     data = request.json
-    username = data['username']
-    password = data['password']
-    email = data['email']
-    phone_number = data['phone']
-    launch_code = data['launch_code']
-    invitation_code = data['invitation_code']
     zone_language = LANGUAGE
     if storage.get("language"):
         zone_language = storage.get("language")
 
     if GRADE == "base":
         raise Exception("The current version does not support this feature")
-    else:
-        if invitation_code != INVITATION_CODE:
-            raise Exception(_("invitation code not right (Thank you for your interest. We will open registration after the beta testing phase.)"))
-        current_tenant = 0
-        tus = TenantUser.get_tenant_user_by_invite_email(email)
+    invitation_code = data['invitation_code']
+    if invitation_code != INVITATION_CODE:
+        raise Exception(_("invitation code not right (Thank you for your interest. We will open registration after the beta testing phase.)"))
+    current_tenant = 0
+    email = data['email']
+    tus = TenantUser.get_tenant_user_by_invite_email(email)
+    for tu in tus:
+        current_tenant = tu["tenant_id"]
+
+    username = data['username']
+    password = data['password']
+    phone_number = data['phone']
+    launch_code = data['launch_code']
+    user = UserPro.create_user(username, password, phone_number, email, zone_language, current_tenant, launch_code)
+
+    # 激活所有被邀请的企业成员
+    if user:
+        # 自动创建一个个人租户
+        # 免费赠送14天基础会员
+        from_data = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        success, billing_end = add_days_to_date(from_data, 14)
+
+        tenant = Tenant.create_tenant_with_codepower(username + _("'s personal Organization"), Tenant.STATUS_PendingVerification, username, "", "", "", Tenant.BILLING_TYPE_BASIC_MONTHLY, Tenant.BILLING_QUOTA_5, billing_star=None, billing_end=billing_end, user_id=user.user_id, username=email)
+
+        current_tid = tenant.tenant_id
+
         for tu in tus:
-            current_tenant = tu["tenant_id"]
-        
-        user = UserPro.create_user(username, password, phone_number, email, zone_language, current_tenant, launch_code)
-        
-        # 激活所有被邀请的企业成员
-        if user:
-            # 自动创建一个个人租户
-            # 免费赠送14天基础会员
-            from_data = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            success, billing_end = add_days_to_date(from_data, 14)
+            current_tid = tu["tenant_id"]
+            TenantUser.active_tenant_user(tu["tenant_user_id"], user.user_id)
 
-            tenant = Tenant.create_tenant_with_codepower(username + _("'s personal Organization"), Tenant.STATUS_PendingVerification, username, "", "", "", Tenant.BILLING_TYPE_BASIC_MONTHLY, Tenant.BILLING_QUOTA_5, billing_star=None, billing_end=billing_end, user_id=user.user_id, username=email)
+        UserPro.update_user(user.user_id, current_tenant=current_tid)
 
-            current_tid = tenant.tenant_id
-
-            for tu in tus:
-                current_tid = tu["tenant_id"]
-                TenantUser.active_tenant_user(tu["tenant_user_id"], user.user_id)
-
-            UserPro.update_user(user.user_id, current_tenant=current_tid)
-        
-        return user.username
+    return user.username
 
 @bp.route('/login', methods=['POST'])
 @json_response

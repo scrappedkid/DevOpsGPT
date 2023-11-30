@@ -9,10 +9,7 @@ def getCurrentLanguageName():
     except Exception as e:
         language = LANGUAGE
 
-    if language == "en":
-        return "English"
-    else:
-        return "Chinese"
+    return "English" if language == "en" else "Chinese"
 
 def getI18n(domain):
     try:
@@ -25,8 +22,7 @@ def getI18n(domain):
 
     translate = gettext.translation(domain=domain, localedir="./i18n", languages=[language])
     translate.install()
-    i18n = translate.gettext
-    return i18n
+    return translate.gettext
 
 def getFrontendText():
     _ = getI18n("frontend")
