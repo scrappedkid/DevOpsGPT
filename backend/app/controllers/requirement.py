@@ -14,17 +14,15 @@ bp = Blueprint('requirement', __name__, url_prefix='/requirement')
 @bp.route('/clear_up', methods=['GET'])
 @json_response
 def clear_up():
-    if GRADE != "base":
-        tenant = Tenant.get_tenant_baseinfo_by_id(storage.get("tenant_id"))
-        if tenant:
-            tenant_name = tenant["name"]
-            billing_type_name = tenant["billing_type_name"]
-            code_power = TenantBill.get_total_codepower(storage.get("tenant_id"))
-    else:
+    if GRADE == "base":
         tenant_name = "DevOpsGPT"
         code_power = '0'
         billing_type_name = "FREE"
 
+    elif tenant := Tenant.get_tenant_baseinfo_by_id(storage.get("tenant_id")):
+        tenant_name = tenant["name"]
+        billing_type_name = tenant["billing_type_name"]
+        code_power = TenantBill.get_total_codepower(storage.get("tenant_id"))
     return {"username": storage.get("username"), "billing_type_name": billing_type_name, "tenant_name": tenant_name, "tenant_id": storage.get("tenant_id"), "code_power": code_power}
 
 

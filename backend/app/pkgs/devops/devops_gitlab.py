@@ -12,10 +12,15 @@ class DevopsGitlab(DevopsInterface):
 
             project = gl.projects.get(repopath)
             pipeline = project.pipelines.create({'ref': branch_name})
-            pipeline_url = apiUrl + '/' + repopath + '/-/pipelines/' + str(pipeline.id)
+            pipeline_url = f'{apiUrl}/{repopath}/-/pipelines/{str(pipeline.id)}'
             return "Get pipline status...", str(pipeline.get_id()), pipeline_url, True
         except Exception as e:
-            return f"Failed to trigger pipline giturl:{apiUrl} repopath:{repopath} branch:{branch_name}, Error:" + str(e), 0, "", False
+            return (
+                f"Failed to trigger pipline giturl:{apiUrl} repopath:{repopath} branch:{branch_name}, Error:{str(e)}",
+                0,
+                "",
+                False,
+            )
 
 
     def getPipelineStatus(self, pipline_id, repopath, ciConfig):
@@ -49,7 +54,7 @@ class DevopsGitlab(DevopsInterface):
 
             return list(reversed(job_info)), docker_image, True
         except Exception as e:
-            return "Failed to get pipline status:" + str(e), '', False
+            return f"Failed to get pipline status:{str(e)}", '', False
 
     def getPipelineJobLogs(self, repopath, pipeline_id, job_id, ciConfig):
         try:
@@ -61,7 +66,7 @@ class DevopsGitlab(DevopsInterface):
 
             return removeColorCodes(logs)
         except Exception as e:
-            return "Failed to get log: " + str(e)
+            return f"Failed to get log: {str(e)}"
 
 
 def removeColorCodes(log_string):
@@ -100,13 +105,7 @@ def parseDockerImage(input_str):
     # 定义正则表达式模式
     pattern = r'kuafuai_docker_image_pushed:(.+?)[&|\n]'
 
-    # 使用 re.search 来查找匹配项
-    match = re.search(pattern, input_str)
-
-    # 如果找到匹配项，则提取结果
-    if match:
-        result = match.group(1)
-        return result
-    else:
-        print("parseDockerImage: 未找到匹配项")
-        return ""
+    if match := re.search(pattern, input_str):
+        return match.group(1)
+    print("parseDockerImage: 未找到匹配项")
+    return ""

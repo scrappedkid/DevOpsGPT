@@ -7,7 +7,7 @@ from config import WORKSPACE_PATH
 class LocalToolsBase(LocalToolsInterface):
     def compileCheck(self, requirementID, ws_path, repo_path):
         print("compile_check:")
-        gitCwd = ws_path+'/'+repo_path
+        gitCwd = f'{ws_path}/{repo_path}'
         script = ""
         print(gitCwd)
 

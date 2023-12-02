@@ -23,7 +23,4 @@ class AsyncTaskRecord(db.Model):
     @staticmethod
     def get_record_by_task_id_and_step(task_id, step_idx):
         records = AsyncTaskRecord.query.filter_by(task_id=task_id, step_idx=step_idx).order_by(AsyncTaskRecord.id.desc()).limit(1).all()
-        if len(records) == 1:
-            return records[0]
-        else:
-            return None
+        return records[0] if len(records) == 1 else None

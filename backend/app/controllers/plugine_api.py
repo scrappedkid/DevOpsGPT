@@ -25,8 +25,9 @@ def repo_analyzer_plugine():
 
     count = AsyncTask.get_today_analyzer_code_count(ip, AsyncTask.Search_Process_Key)
     if count > 0:
-        process_task = AsyncTask.get_today_analyzer_code_list(ip, AsyncTask.Search_Process_Key)
-        if process_task:
+        if process_task := AsyncTask.get_today_analyzer_code_list(
+            ip, AsyncTask.Search_Process_Key
+        ):
             content = json.loads(process_task.task_content)
             repo = content['repo']
             task_no = process_task.token
@@ -39,8 +40,9 @@ def repo_analyzer_plugine():
 
     data = {"type": type, "repo": repo}
 
-    task = AsyncTask.create_task(AsyncTask.Type_Analyzer_Code, type + ":" + repo, json.dumps(data), ip)
-    if task:
+    if task := AsyncTask.create_task(
+        AsyncTask.Type_Analyzer_Code, f"{type}:{repo}", json.dumps(data), ip
+    ):
         return {"task_no": task.token}
     else:
         raise AnalyzerCodeException("Server exception, please contact the administrator", 5001)
@@ -53,8 +55,7 @@ def repo_analyzer_check():
     if task_no is None or len(task_no) == 0:
         raise Exception("param error")
 
-    task = AsyncTask.get_task_by_token(task_no)
-    if task:
+    if task := AsyncTask.get_task_by_token(task_no):
         return {"task_no": task.token, "status": task.task_status, "message": task.task_status_message}
     else:
         raise Exception("查询数据不存在")

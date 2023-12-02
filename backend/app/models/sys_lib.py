@@ -59,8 +59,7 @@ class SysLib(db.Model):
 
     @staticmethod
     def update_lib(sys_lib_id, lib_name, purpose, specification):
-        sys_lib = SysLib.query.get(sys_lib_id)
-        if sys_lib:
+        if sys_lib := SysLib.query.get(sys_lib_id):
             sys_lib.lib_name = lib_name
             sys_lib.purpose = purpose
             sys_lib.specification = specification
@@ -70,8 +69,7 @@ class SysLib(db.Model):
 
     @staticmethod
     def delete_lib(sys_lib_id):
-        sys_lib = SysLib.query.get(sys_lib_id)
-        if sys_lib:
+        if sys_lib := SysLib.query.get(sys_lib_id):
             db.session.delete(sys_lib)
             db.session.commit()
             return True

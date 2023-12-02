@@ -12,10 +12,7 @@ def limit_ip_func():
     if ip != '127.0.0.1':
         return ip
 
-    if remote_ip != '127.0.0.1':
-        return remote_ip
-
-    return '127.0.0.1'
+    return remote_ip if remote_ip != '127.0.0.1' else '127.0.0.1'
 
 
 limiter_ip = Limiter(key_func=limit_ip_func)

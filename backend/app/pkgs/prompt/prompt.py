@@ -33,35 +33,26 @@ def pre_check_quota(func):
 
 @pre_check_quota
 def clarifyRequirement(requirementID, userPrompt, globalContext, appArchitecture, req):
-    if GRADE == "base":
-        obj = RequirementBasic()
-    else:
-        obj = RequirementPro()
-        
+    obj = RequirementBasic() if GRADE == "base" else RequirementPro()
     return obj.clarifyRequirement(requirementID, userPrompt, globalContext, appArchitecture, req)
 
 @pre_check_quota
 def clarifyAPI(requirementID, userPrompt, apiDoc):
-    if GRADE == "base":
-        obj = ApiBasic()
-    else:
-        obj = ApiPro()
-        
+    obj = ApiBasic() if GRADE == "base" else ApiPro()
     return obj.clarifyAPI(requirementID, userPrompt, apiDoc)
 
 @pre_check_quota
 def splitTask(projectInfo, requirementID, newfeature, serviceName, appBasePrompt, projectIntro, projectLib, serviceStruct, appID, tenant_id):
     language = projectInfo["language"].lower()
-    print("splitTask language:"+language)
+    print(f"splitTask language:{language}")
     if GRADE == "base":
         obj = SubtaskBasic()
+    elif "java" in language:
+        obj = SubtaskJavaPro()
+    elif "python" in language:
+        obj = SubtaskPythonPro()
     else:
-        if "java" in language:
-            obj = SubtaskJavaPro()
-        elif "python" in language:
-            obj = SubtaskPythonPro()
-        else:
-            obj = SubtaskPro()
+        obj = SubtaskPro()
 
     return obj.splitTask(requirementID, newfeature, serviceName, appBasePrompt, projectIntro, projectLib, serviceStruct, appID, tenant_id)
 
@@ -82,56 +73,32 @@ def splitTaskDo(req_info, service_info, tec_doc, tenant_id):
 
 @pre_check_quota
 def aiReferenceRepair(requirementID, newCode, referenceCode, fileTask, filePath):
-    if GRADE == "base":
-        obj = CodeBasic()
-    else:
-        obj = CodePro()
-        
+    obj = CodeBasic() if GRADE == "base" else CodePro()
     return obj.aiReferenceRepair(requirementID, newCode, referenceCode, fileTask, filePath)
 
 @pre_check_quota
 def aiAnalyzeError(requirementID, message, filePath):
-    if GRADE == "base":
-        obj = CodeBasic()
-    else:
-        obj = CodePro()
-        
+    obj = CodeBasic() if GRADE == "base" else CodePro()
     return obj.aiAnalyzeError(requirementID, message, filePath)
 
 @pre_check_quota
 def aiFixError(requirementID, error_msg, solution, code, filePath, type):
-    if GRADE == "base":
-        obj = CodeBasic()
-    else:
-        obj = CodePro()
-        
+    obj = CodeBasic() if GRADE == "base" else CodePro()
     return obj.aiFixError(requirementID, error_msg, solution, code, filePath, type)
 
 @pre_check_quota
 def aiCheckCode(requirementID, fileTask, code, filePath, service_name):
-    if GRADE == "base":
-        obj = CodeBasic()
-    else:
-        obj = CodePro()
-        
+    obj = CodeBasic() if GRADE == "base" else CodePro()
     return obj.aiCheckCode(requirementID, fileTask, code, filePath, service_name)
 
 @pre_check_quota
 def aiMergeCode(requirementID, fileTask, baseCode, newCode, filePath):
-    if GRADE == "base":
-        obj = CodeBasic()
-    else:
-        obj = CodePro()
-        
+    obj = CodeBasic() if GRADE == "base" else CodePro()
     return obj.aiMergeCode(requirementID, fileTask, baseCode, newCode, filePath)
 
 @pre_check_quota
 def aiGenCode(requirementID, fileTask, newTask, newCode, filePath):
-    if GRADE == "base":
-        obj = CodeBasic()
-    else:
-        obj = CodePro()
-        
+    obj = CodeBasic() if GRADE == "base" else CodePro()
     return obj.aiGenCode(requirementID, fileTask, newTask, newCode, filePath)
 
 def gen_write_code(requirement_id, service_name, file_path, development_detail, step_id):
@@ -144,19 +111,18 @@ def gen_write_code(requirement_id, service_name, file_path, development_detail, 
 
     if GRADE == "base":
         obj = SubtaskBasic()
+    elif "java" in service_name:
+        obj = SubtaskJavaPro()
+    elif "python" in service_name:
+        obj = SubtaskPythonPro()
+    elif "vue" in service_name:
+        obj = SubtaskVuePro()
     else:
-        if "java" in service_name:
-            obj = SubtaskJavaPro()
-        elif "python" in service_name:
-            obj = SubtaskPythonPro()
-        elif "vue" in service_name:
-            obj = SubtaskVuePro()
-        else:
-            obj = SubtaskPro()
+        obj = SubtaskPro()
 
     jsonData = {"reasoning": development_detail, "code": ""}
     success = True
-    
+
     re = obj.write_code(requirement_id, service_name, file_path, development_detail, step_id)
     jsonData["code"] = re[0]["content"]
 

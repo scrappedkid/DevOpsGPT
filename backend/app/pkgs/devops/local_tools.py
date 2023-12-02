@@ -5,11 +5,7 @@ from config import GRADE
 from config import WORKSPACE_PATH
 
 def getFileContent(file_path, bath_path):
-    if len(bath_path) > 2:
-        path = bath_path + "/" + file_path
-    else:
-        path = file_path
-
+    path = f"{bath_path}/{file_path}" if len(bath_path) > 2 else file_path
     try:
         success, content = read_file_content(path)
         if not success:
@@ -20,33 +16,17 @@ def getFileContent(file_path, bath_path):
     return True, content 
 
 def compileCheck(requirementID, ws_path,repo_path):
-    if GRADE == "base":
-        obj = LocalToolsBase()
-    else:
-        obj = LocalToolsPro()
-        
+    obj = LocalToolsBase() if GRADE == "base" else LocalToolsPro()
     return obj.compileCheck(requirementID, ws_path,repo_path)
 
 def lintCheck(requirementID, ws_path, repo_path, file_path):
-    if GRADE == "base":
-        obj = LocalToolsBase()
-    else:
-        obj = LocalToolsPro()
-        
+    obj = LocalToolsBase() if GRADE == "base" else LocalToolsPro()
     return obj.lintCheck(requirementID, ws_path, repo_path, file_path)
 
 def unitTest(requirementID, ws_path, repo_path, file_path):
-    if GRADE == "base":
-        obj = LocalToolsBase()
-    else:
-        obj = LocalToolsPro()
-        
+    obj = LocalToolsBase() if GRADE == "base" else LocalToolsPro()
     return obj.unitTest(requirementID, ws_path, repo_path, file_path)
 
 def apiTest(requirementID, ws_path, repo_path, file_path):
-    if GRADE == "base":
-        obj = LocalToolsBase()
-    else:
-        obj = LocalToolsPro()
-        
+    obj = LocalToolsBase() if GRADE == "base" else LocalToolsPro()
     return obj.apiTest(requirementID, ws_path, repo_path, file_path)

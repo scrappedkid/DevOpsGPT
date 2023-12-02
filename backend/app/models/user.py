@@ -1,8 +1,5 @@
 from config import USERS
 
 class User():
-    def checkPassword(username, password):
-        if username in USERS and USERS[username] == password:
-            return True
-        else:
-            return False
+    def checkPassword(self, password):
+        return self in USERS and USERS[self] == password

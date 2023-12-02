@@ -5,10 +5,7 @@ from config import DEVOPS_TOOLS, GIT_URL, GIT_TOKEN, GIT_USERNAME, GIT_EMAIL, GI
 
 class SettingBasic(SettingInterface):
     def getGitConfigList(self, tenantID, appID, hideToken = False):
-        gitList = []
-        name = "Public git config"
-        if storage.get("language") == 'zh':
-            name = "公共Git配置"
+        name = "公共Git配置" if storage.get("language") == 'zh' else "Public git config"
         public_cfg = {
             "name" : name,
             "git_provider" : DEVOPS_TOOLS,
@@ -20,16 +17,12 @@ class SettingBasic(SettingInterface):
         }
         if hideToken:
             public_cfg["git_token"] = hide_half_str(public_cfg["git_token"])
-       
-        gitList.append(public_cfg)
 
+        gitList = [public_cfg]
         return gitList, True
     
     def getCIConfigList(self, tenantID, appID, hideToken=False):
-        gitList = []
-        name = "Public CI config"
-        if storage.get("language") == 'zh':
-            name = "公共CI配置"
+        name = "公共CI配置" if storage.get("language") == 'zh' else "Public CI config"
         public_cfg = {
             "name" : name,
             "ci_provider" : DEVOPS_TOOLS,
@@ -40,16 +33,12 @@ class SettingBasic(SettingInterface):
         }
         if hideToken:
             public_cfg["ci_token"] = hide_half_str(public_cfg["ci_token"])
-        
-        gitList.append(public_cfg)
 
+        gitList = [public_cfg]
         return gitList, True
     
     def getCDConfigList(self, tenantID, appID, hideToken):
-        gitList = []
-        name = "Public CD config"
-        if storage.get("language") == 'zh':
-            name = "公共CD配置"
+        name = "公共CD配置" if storage.get("language") == 'zh' else "Public CD config"
         public_cfg = {
             "name" : name,
             "cd_provider" : CD_TOOLS,
@@ -61,8 +50,7 @@ class SettingBasic(SettingInterface):
             public_cfg["ACCESS_KEY"] = hide_half_str(public_cfg["ACCESS_KEY"])
             public_cfg["SECRET_KEY"] = hide_half_str(public_cfg["SECRET_KEY"])
 
-        gitList.append(public_cfg)
-
+        gitList = [public_cfg]
         return gitList, True
     
     def getLLMConfigList(self, tenantID, appID):
