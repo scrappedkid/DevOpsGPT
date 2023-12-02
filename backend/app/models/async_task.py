@@ -47,23 +47,18 @@ class AsyncTask(db.Model):
 
     @staticmethod
     def get_task_by_token(token):
-        st = AsyncTask.query.filter_by(token=token).first()
-
-        return st
+        return AsyncTask.query.filter_by(token=token).first()
 
     @staticmethod
     def get_analyzer_code_task_one(status):
         query_tasks = AsyncTask.query.filter(AsyncTask.task_type == AsyncTask.Type_Analyzer_Code,
                                              AsyncTask.task_status.in_([status])
                                              ).limit(1).all()
-        if len(query_tasks) == 1:
-            return query_tasks[0]
-        else:
-            return None
+        return query_tasks[0] if len(query_tasks) == 1 else None
 
     @staticmethod
     def get_analyzer_code_by_name(task_name):
-        today = datetime.today()
+        today = datetime.now()
         start_date = today - timedelta(days=7)
 
         query_tasks = AsyncTask.query.filter(AsyncTask.task_type == AsyncTask.Type_Analyzer_Code,
@@ -71,10 +66,7 @@ class AsyncTask(db.Model):
                                              AsyncTask.created_at >= start_date,
                                              AsyncTask.created_at <= today,
                                              AsyncTask.task_name == task_name).limit(1).all()
-        if len(query_tasks) == 1:
-            return query_tasks[0]
-        else:
-            return None
+        return query_tasks[0] if len(query_tasks) == 1 else None
 
     # 今天 分析代码
     @staticmethod
@@ -86,7 +78,7 @@ class AsyncTask(db.Model):
         else:
             param_status = AsyncTask.Search_All_Value
 
-        today = datetime.today()
+        today = datetime.now()
         start_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
         count = AsyncTask.query.filter(AsyncTask.task_type == AsyncTask.Type_Analyzer_Code,
@@ -105,7 +97,7 @@ class AsyncTask(db.Model):
         else:
             param_status = AsyncTask.Search_All_Value
 
-        today = datetime.today()
+        today = datetime.now()
         start_date = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
         query_tasks = AsyncTask.query.filter(AsyncTask.task_type == AsyncTask.Type_Analyzer_Code,
@@ -113,15 +105,11 @@ class AsyncTask(db.Model):
                                              AsyncTask.created_at >= start_date,
                                              AsyncTask.created_at <= today,
                                              AsyncTask.ip == ip).limit(1).all()
-        if len(query_tasks) == 1:
-            return query_tasks[0]
-        else:
-            return None
+        return query_tasks[0] if len(query_tasks) == 1 else None
 
     @staticmethod
     def update_task_status(task_id, status):
-        task = AsyncTask.query.get(task_id)
-        if task:
+        if task := AsyncTask.query.get(task_id):
             task.updated_at = datetime.now()
             task.task_status = status
             db.session.commit()
@@ -146,8 +134,7 @@ class AsyncTask(db.Model):
 
     @staticmethod
     def update_task_message(task_id, message):
-        task = AsyncTask.query.get(task_id)
-        if task:
+        if task := AsyncTask.query.get(task_id):
             task.updated_at = datetime.now()
             task.task_status_message = message
             db.session.commit()
@@ -158,8 +145,7 @@ class AsyncTask(db.Model):
 
     @staticmethod
     def update_task_status_and_message(task_id, status, message):
-        task = AsyncTask.query.get(task_id)
-        if task:
+        if task := AsyncTask.query.get(task_id):
             task.updated_at = datetime.now()
             task.task_status = status
             task.task_status_message = message
@@ -171,8 +157,7 @@ class AsyncTask(db.Model):
 
     @staticmethod
     def update_task_status_and_message_and_name(task_id, status, message, name):
-        task = AsyncTask.query.get(task_id)
-        if task:
+        if task := AsyncTask.query.get(task_id):
             task.updated_at = datetime.now()
             task.task_status = status
             task.task_status_message = message

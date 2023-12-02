@@ -66,9 +66,7 @@ class Requirement(db.Model):
 
     @staticmethod
     def get_requirement_by_id(requirement_id, tenant_id=0):
-        tenant_id = int(tenant_id)
-        req = Requirement.query.get(requirement_id)
-        if req:
+        if req := Requirement.query.get(requirement_id):
             req_dict = {
                     'requirement_id': req.requirement_id,
                     'requirement_name': req.requirement_name,
@@ -85,9 +83,8 @@ class Requirement(db.Model):
                     'updated_at': str(req.updated_at),
                     'app': Application.get_application_by_id(req.app_id)
                 }
-            if tenant_id and tenant_id != req_dict["tenant_id"]:
-                return None
-            return req_dict
+            tenant_id = int(tenant_id)
+            return None if tenant_id and tenant_id != req_dict["tenant_id"] else req_dict
         return None
 
     @staticmethod
@@ -95,19 +92,17 @@ class Requirement(db.Model):
         tenant_id = int(tenant_id)
         requirement = Requirement.query.get(requirement_id)
         if not requirement:
-            print("update_requirement requirement not found:"+requirement_id)
+            print(f"update_requirement requirement not found:{requirement_id}")
             return None
-        
+
         if tenant_id and tenant_id != requirement.tenant_id:
             return None
-        
-        if requirement:
-            for key, value in kwargs.items():
-                setattr(requirement, key, value)
-            requirement.updated_at = datetime.utcnow()
-            db.session.commit()
-            return requirement
-        return None
+
+        for key, value in kwargs.items():
+            setattr(requirement, key, value)
+        requirement.updated_at = datetime.utcnow()
+        db.session.commit()
+        return requirement
 
     @staticmethod
     def delete_requirement(requirement_id, tenant_id):

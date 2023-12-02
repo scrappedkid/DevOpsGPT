@@ -23,9 +23,9 @@ def save_code():
     code = request.json.get('code')
     tenantID = storage.get("tenant_id")
 
-    req = Requirement.get_requirement_by_id(requirementID, tenantID) 
+    req = Requirement.get_requirement_by_id(requirementID, tenantID)
     gitPath, success = getServiceGitPath(req["app_id"] , serviceName)
-    path = get_ws_path(requirementID)+'/'+gitPath+"/"+file_path
+    path = f'{get_ws_path(requirementID)}/{gitPath}/{file_path}'
     write_file_content(path, code)
     return _("Saved code successfully.")
 
@@ -66,7 +66,7 @@ def gitpush():
     wsPath = get_ws_path(requirementID)
     tenantID = storage.get("tenant_id")
 
-    req = Requirement.get_requirement_by_id(requirementID, tenantID) 
+    req = Requirement.get_requirement_by_id(requirementID, tenantID)
     commitMsg = req["requirement_name"]
     fatureBranch = req["default_target_branch"]
     gitPath, success = getServiceGitPath(req["app_id"], serviceName)
@@ -77,17 +77,19 @@ def gitpush():
     Requirement.update_requirement(requirement_id=requirementID, tenant_id=tenantID, status=REQUIREMENT_STATUS_Completed)
 
     if not GIT_ENABLED:
-        raise Exception(_("Failed to push code.")+f" You did not set Git parameters in the configuration file.")
+        raise Exception(
+            _("Failed to push code.")
+            + " You did not set Git parameters in the configuration file."
+        )
     else:
         success, msg = pushCode(wsPath, gitPath, fatureBranch, commitMsg, gitConfigList)
 
-    if success:
-        gitConfig = gitConfigList[0]
-        git_url = gitConfig["git_url"]+"/"+gitPath+"/tree/"+fatureBranch
-        clone_url = f"git clone -b {fatureBranch} "+gitConfig["git_url"]+f"/{gitPath}"
-        return _("Push code successfully.") + f" from {wsPath} to {git_url} <br /><br /> "+_("Fetch code command: ")+f"{clone_url}"
-    else:
+    if not success:
         raise Exception(_("Failed to push code.")+f"In the {wsPath}/{gitPath} directory, {msg}")
+    gitConfig = gitConfigList[0]
+    git_url = gitConfig["git_url"]+"/"+gitPath+"/tree/"+fatureBranch
+    clone_url = f"git clone -b {fatureBranch} "+gitConfig["git_url"]+f"/{gitPath}"
+    return _("Push code successfully.") + f" from {wsPath} to {git_url} <br /><br /> "+_("Fetch code command: ")+f"{clone_url}"
 
 
 @bp.route('/resetWorkspace', methods=['POST'])
@@ -100,7 +102,7 @@ def resetWorkspace():
     wsPath = get_ws_path(requirementID)
     tenantID = storage.get("tenant_id")
 
-    req = Requirement.get_requirement_by_id(requirementID, tenantID) 
+    req = Requirement.get_requirement_by_id(requirementID, tenantID)
     commitMsg = req["requirement_name"]
     fatureBranch = req["default_target_branch"]
     gitPath, success = getServiceGitPath(req["app_id"], serviceName)
@@ -111,7 +113,10 @@ def resetWorkspace():
     Requirement.update_requirement(requirement_id=requirementID, tenant_id=tenantID, status=REQUIREMENT_STATUS_Completed)
 
     if not GIT_ENABLED:
-        raise Exception(_("Failed to reset code.")+f" You did not set Git parameters in the configuration file.")
+        raise Exception(
+            _("Failed to reset code.")
+            + " You did not set Git parameters in the configuration file."
+        )
     else:
         success, msg = gitResetWorkspace(wsPath, gitPath, fatureBranch, commitMsg, gitConfigList)
 

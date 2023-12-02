@@ -58,35 +58,43 @@ class SubtaskBasic(SubtaskInterface):
 
 
 def setpGenCode(requirementID, pseudocode, feature, specification, serviceStruct, serviceName):
-    context = []
-    context.append({
-        "role": "system",
-        "content": """
+    context = [
+        {
+            "role": "system",
+            "content": """
 NOTICE
 Role: As a senior full stack developer, you are very diligent and good at writing complete code. 
 You will get "Development specification" and "Development requirement" and "Pseudocode" for write the final complete code that works correctly.
-Please note that the code should be fully functional. No placeholders no todo ensure that all code can run in production environment correctly."""})
-    context.append({
-        "role": "user",
-        "content": """
+Please note that the code should be fully functional. No placeholders no todo ensure that all code can run in production environment correctly.""",
+        },
+        {
+            "role": "user",
+            "content": """
 Development specification:
 ```
-""" + specification + """
+"""
+            + specification
+            + """
 ```
 
 Development requirement:
 ```
-""" + feature + """
+"""
+            + feature
+            + """
 ````
 
 Pseudocode:
 ```
-""" + pseudocode + """
+"""
+            + pseudocode
+            + """
 ```
-"""})
-    context.append({
-        "role": "user",
-        "content": """
+""",
+        },
+        {
+            "role": "user",
+            "content": """
 Now complete all Pseudocode codes according to the above information including ALL code, it is going to be a long response.
 Please note that the code should be fully functional. No placeholders no todo ensure that all code can run in production environment correctly.
 
@@ -106,21 +114,19 @@ Please note that the code should be fully functional. No placeholders.
 
 Make sure that files contain all imports, types etc. The code should be fully functional. Make sure that code in different files are compatible with each other.
 Before you finish, double check that all parts of the architecture is present in the files.
-"""
-    })
-
+""",
+        },
+    ]
     # data = TEST_RESULT
     # success = True
     data, total_tokens, success = chatCompletion(context)
-    
+
     jsonData = parse_chat(data, serviceName)
     print(jsonData)
 
     return jsonData, success
 
 def setpPseudocode(requirement_id, language, framework, tec_doc,  service_struct, original_requirement):
-    context = []
-
     content =  """
 # Context
 Existing Code directory structure:
@@ -157,13 +163,12 @@ CODE```
 
 Do not explain and talk, directly respond pseudocode of each file.
 """
-    context.append({"role": "user", "content": content})
+    context = [{"role": "user", "content": content}]
     message, total_tokens, success = chatCompletion(context)
 
     return message, success
 
 def setpSubTask(requirementID, feature, appBasePrompt, serviceStruct, specification, serviceName):
-    context = []
     content = """Your job is to think step by step according to the basic "Code directory structure" and "Development specification" provided below, and break down the "Development requirement" provided below into multiple substeps of writing code. each step needs to be detailed.
 
 Only break down subtasks of writing code and do not write code, and decomposition should be appropriate and reasonable, neither over-splitting nor missing key steps.
@@ -197,7 +202,7 @@ Do not explain and talk, directly respond substeps.
      - ...
 ```
 """
-    context.append({"role": "system", "content": content})
+    context = [{"role": "system", "content": content}]
     message, total_tokens, success = chatCompletion(context)
 
     return message, context, success
@@ -205,7 +210,6 @@ Do not explain and talk, directly respond substeps.
 
 # choose lib by req
 def setpReqChooseLib(requirementID, feature, appBasePrompt, projectInfo, projectLib):
-    context = []
     content = appBasePrompt + """, Your task is to analyze the requirements and find the appropriate component names. Think step by step, combine the existing project information and the existing component list, analyze the user input requirements to use which components, be careful to select only among the existing components. Please do not write code
 
 Note that the returned component name must contain only the name but not the description. In addition, the component name must be exactly the same as that in the component list.
@@ -225,25 +229,24 @@ requirements:
 """ + feature + """
 ```
     """
-    context.append({"role": "system", "content": content})
+    context = [{"role": "system", "content": content}]
     message, total_tokens, success = chatCompletion(context)
 
-    context.append({
-        "role": "assistant",
-        "content": message
-    })
-
-    context.append({
-        "role": "user",
-        "content": """Summary of the components chosen above.you will provide only the output in the exact format specified below with no explanation or conversation.
+    context.extend(
+        (
+            {"role": "assistant", "content": message},
+            {
+                "role": "user",
+                "content": """Summary of the components chosen above.you will provide only the output in the exact format specified below with no explanation or conversation.
 
 You should only directly respond in JSON format as described below, Ensure the response must can be parsed by Python json.loads, Response Format example:
 ```
 [{"name":"{the name without a description}","reason":"reason","description":"description"}]
 ```
-"""
-    })
-
+""",
+            },
+        )
+    )
     data, total_tokens, success = chatCompletion(context)
     data = fix_llm_json_str(data)
 
@@ -254,12 +257,11 @@ def parse_chat(chat, serviceName):
     matches = re.finditer(regex, chat, re.DOTALL)
 
     files = []
+    pattern = r'filepath:\s*(.*?)\s*code explanation:\s*(.*)'
     for match in matches:
         print(match.group(1))
         print("=======")
-        pattern = r'filepath:\s*(.*?)\s*code explanation:\s*(.*)'
-        match2 = re.search(pattern, match.group(1), re.DOTALL)
-        if match2:
+        if match2 := re.search(pattern, match.group(1), re.DOTALL):
             path = match2.group(1)
             interpreter = match2.group(2)
         else:
@@ -270,8 +272,8 @@ def parse_chat(chat, serviceName):
         code = match.group(2)
 
         # Add the file to the list
-        if path.startswith(serviceName+"/"):
-            path = path[len(serviceName+"/"):]
+        if path.startswith(f"{serviceName}/"):
+            path = path[len(f"{serviceName}/"):]
         files.append({"file-path": path,"code": code, "code-interpreter": interpreter, "reference-file": ""})
 
     # Return the files

@@ -13,9 +13,9 @@ class Application(db.Model):
     default_source_branch = db.Column(db.String(255))
     default_target_branch = db.Column(db.String(255))
 
-    def create(tenant_id, creater, name, description, default_source_branch, default_target_branch, git_config, ci_config, cd_config):
-        if not tenant_id:
-            tenant_id = 0
+    def create(self, creater, name, description, default_source_branch, default_target_branch, git_config, ci_config, cd_config):
+        if not self:
+            self = 0
 
         if len(name) < 2:
             return "The name field cannot be empty", False
@@ -23,15 +23,15 @@ class Application(db.Model):
             return "The description field cannot be empty", False
 
         app = Application(
-            tenant_id=tenant_id,
+            self=self,
             creater=creater,
             name=name,
-            git_config=git_config, 
-            ci_config=ci_config, 
+            git_config=git_config,
+            ci_config=ci_config,
             cd_config=cd_config,
             description=description,
             default_source_branch=default_source_branch,
-            default_target_branch=default_target_branch
+            default_target_branch=default_target_branch,
         )
         db.session.add(app)
         db.session.commit()
@@ -71,9 +71,9 @@ class Application(db.Model):
         
         return application_list
 
-    def get_application_by_id(appID, tenant_id=0):
+    def get_application_by_id(self, tenant_id=0):
         tenant_id = int(tenant_id)
-        app = Application.query.get(appID)
+        app = Application.query.get(self)
         app_dict = None
         if app:
             app_dict = {
@@ -93,14 +93,12 @@ class Application(db.Model):
                 return None
         return app_dict
     
-    def update_application(app_id, tenant_id, **kwargs):
+    def update_application(self, tenant_id, **kwargs):
         tenant_id = int(tenant_id)
-        app = Application.query.get(app_id)
-        
-        if app:
+        if app := Application.query.get(self):
             if tenant_id and tenant_id != app.tenant_id:
                 return None
-        
+
             for key, value in kwargs.items():
                 setattr(app, key, value)
             db.session.commit()

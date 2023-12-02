@@ -51,13 +51,6 @@ def get_cd_config_list():
 def get_llm_config_list():
     _ = getI18n("controllers")
     raise Exception(_("Failed to get git config list."))
-    tenantID = request.args.get('tenant_id')
-
-    gitList, success = getLLMConfigList(tenantID, 0)
-    if not success:
-        raise Exception(_("Failed to get git config list."))
-
-    return gitList
 
 @bp.route('/edit_git', methods=['POST'])
 @json_response

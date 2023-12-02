@@ -185,25 +185,8 @@ class CDAWS:
                 SecretId=secret_name
             )
         except ClientError as e:
-            # 如果没有找到密钥或发生其他错误，打印错误消息
-            if e.response['Error']['Code'] == 'DecryptionFailureException':
-                # Secrets Manager 不能解密受保护的 secret 文本
-                raise e
-            elif e.response['Error']['Code'] == 'InternalServiceErrorException':
-                # 发生内部服务错误
-                raise e
-            elif e.response['Error']['Code'] == 'InvalidParameterException':
-                # 提供的参数无效
-                raise e
-            elif e.response['Error']['Code'] == 'InvalidRequestException':
-                # 提供的请求无效
-                raise e
-            elif e.response['Error']['Code'] == 'ResourceNotFoundException':
-                # 未找到指定的 secret
-                raise e
-            else:
-                # 未知错误
-                raise e
+            # Secrets Manager 不能解密受保护的 secret 文本
+            raise e
         else:
             # 如果 secret 使用了字符串，则直接返回它
             if 'SecretString' in get_secret_value_response:

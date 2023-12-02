@@ -6,9 +6,7 @@ def set(key, value):
 
 def get(key):
     try:
-        if key in session:
-            return session[key]
-        return None
+        return session[key] if key in session else None
     except Exception as e:
         return None
 

@@ -1,7 +1,7 @@
 class UserPro():
     __tablename__ = 'user'
 
-    def checkPassword(username, password):
+    def checkPassword(self, password):
         # The current version does not support this feature
         return True 
 

@@ -199,22 +199,22 @@ class RequirementBasic(RequirementInterface):
         try:
             preContext = json.loads(globalContext)
         except Exception as e:
-            print(str(e))
+            print(e)
 
         PRDTemplate = DOC_COMMON
         ServiceType = "COMMON"
         service_list = ApplicationService.get_services_by_app_id(req["app_id"])
         for service in service_list:
             ServiceType = service["service_type"]
-            if service["service_type"] == "COMMON":
+            if ServiceType == "COMMON":
                 PRDTemplate = DOC_COMMON
-            elif service["service_type"] == "FRONTEND":
+            elif ServiceType == "FRONTEND":
                 PRDTemplate = DOC_FRONTEND
-            elif service["service_type"] == "BACKEND":
+            elif ServiceType == "BACKEND":
                 PRDTemplate = DOC_BACKEND
-            elif service["service_type"] == "GAME":
+            elif ServiceType == "GAME":
                 PRDTemplate = DOC_GAME
-            elif service["service_type"] == "FRONTEND_BACKEND":
+            elif ServiceType == "FRONTEND_BACKEND":
                 PRDTemplate = FRONTEND_BACKEND
 
         # todo 这个参数暂时不要调整，过多的澄清会导致出现幻觉，并且程序在获取澄清列表的时候也需要调整
@@ -291,29 +291,37 @@ Note: Keep conversations in """+getCurrentLanguageName()+""".
 
 
 def organize(requirementID, firstPrompt, PRDTemplate, appArchitecture, service_list, ServiceType, clarified_list):
-    Organize = []
-    Organize.append({
-        "role": "system",
-        "content": """
+    Organize = [
+        {
+            "role": "system",
+            "content": """
 # Context
 ## Original Requirements
 ```
-"""+firstPrompt+"""
+"""
+            + firstPrompt
+            + """
 ```
 
 ## clarified list:
 ```
-"""+clarified_list+"""
+"""
+            + clarified_list
+            + """
 ```
 
 ## Application Information:
 ```
-"""+appArchitecture+"""
+"""
+            + appArchitecture
+            + """
 ```
 
 ## Product document Templates
 ---
-"""+PRDTemplate+"""
+"""
+            + PRDTemplate
+            + """
 ---
 
 -----
@@ -325,20 +333,20 @@ The answers from the 'clarified list' are of utmost importance and must be inclu
 
 Follow the "Product document Templates" structure strictly and don't add any extra structure.
 Output results directly carefully referenced the "Product document Templates" without dialogue and explanation.
-Note: output in """+getCurrentLanguageName()+""".
-"""
-    })
-
+Note: output in """
+            + getCurrentLanguageName()
+            + """.
+""",
+        }
+    ]
     message, total_tokens, success = chatCompletion(Organize, "")
 
     parsed_data = convert_code_blocks_to_markdown(message)
     print(parsed_data)
-    services_involved = []
-    for service in service_list:
-        services_involved.append({
-            "service_name": service["name"],
-            "reasoning": ""
-        })
+    services_involved = [
+        {"service_name": service["name"], "reasoning": ""}
+        for service in service_list
+    ]
     re = {
         "development_requirements_overview": "",
         "development_requirements_detail": parsed_data,
@@ -348,7 +356,7 @@ Note: output in """+getCurrentLanguageName()+""".
 
     # ssss
     storage.set("last_prd", parsed_data)
-    
+
     re["review"] = review(requirementID, message, ServiceType, appArchitecture)
 
     return re, success
@@ -356,39 +364,43 @@ Note: output in """+getCurrentLanguageName()+""".
 def adjust(requirementID, userPrompt, PRDTemplate, appArchitecture, service_list, ServiceType):
     # ssss
     last_prd = storage.get("last_prd")
-    
+
     if len(last_prd) < 1:
         raise Exception("Failed to obtain the PRD document. 获取PRD文档失败。")
 
-    Organize = []
-    Organize.append({
-        "role": "system",
-        "content": """
+    Organize = [
+        {
+            "role": "system",
+            "content": """
 Keep the structure of the requirements document unchanged Re-generate the requirements document based on feedback below.
 
 feedback
 ```
-"""+userPrompt+"""
+"""
+            + userPrompt
+            + """
 ```
 
 requirements document
 ```
-"""+last_prd+"""
+"""
+            + last_prd
+            + """
 ```
 
-Output modified final requirement document content directly in """+getCurrentLanguageName()+""".
-"""
-    })
-
+Output modified final requirement document content directly in """
+            + getCurrentLanguageName()
+            + """.
+""",
+        }
+    ]
     message, total_tokens, success = chatCompletion(Organize, "")
 
     print(message)
-    services_involved = []
-    for service in service_list:
-        services_involved.append({
-            "service_name": service["name"],
-            "reasoning": ""
-        })
+    services_involved = [
+        {"service_name": service["name"], "reasoning": ""}
+        for service in service_list
+    ]
     re = {
         "development_requirements_overview": "",
         "development_requirements_detail": message,
@@ -399,22 +411,28 @@ Output modified final requirement document content directly in """+getCurrentLan
     return re, success
 
 def review(requirementID, PRD, ServiceType, appArchitecture):
-    Organize = []
-    Organize.append({
-        "role": "system",
-        "content": """
-Role: You are a professional """+ServiceType+""" software developer, your task is to review the Product Requirements Document (PRD) to ensure that the requirements can be effectively developed within the existing application and that the requirements are sufficiently detailed. Please provide no more than three of the most constructive suggestions.
+    Organize = [
+        {
+            "role": "system",
+            "content": """
+Role: You are a professional """
+            + ServiceType
+            + """ software developer, your task is to review the Product Requirements Document (PRD) to ensure that the requirements can be effectively developed within the existing application and that the requirements are sufficiently detailed. Please provide no more than three of the most constructive suggestions.
 
 Note: suggestions need focus on functional requirements rather than technical requirements.
 
 Requirement Document:
 '''
-"""+PRD+"""
+"""
+            + PRD
+            + """
 '''
 
 existing application info:
 ```
-"""+appArchitecture+"""
+"""
+            + appArchitecture
+            + """
 ```
 
 Output carefully referenced "Format example" in format without explanation or dialogue.
@@ -426,10 +444,12 @@ Format example:
 ]
 '''
 
-Note: List suggestions in """+getCurrentLanguageName()+""".
-"""
-    })
-
+Note: List suggestions in """
+            + getCurrentLanguageName()
+            + """.
+""",
+        }
+    ]
     message, total_tokens, success = chatCompletion(Organize, "")
 
     print(message)
@@ -441,12 +461,7 @@ def convert_code_blocks_to_markdown_items(input_text):
     lines = [line.strip().strip('",').strip("',")
              for line in input_text.split('\n')]
 
-    # 格式化成列表项
-    formatted_lines = []
-    for line in lines:
-        if len(line) > 0:
-            formatted_lines.append('- ' + line.strip('"'))
-
+    formatted_lines = ['- ' + line.strip('"') for line in lines if len(line) > 0]
     # 返回格式化后的文本
     return '\n'.join(formatted_lines)
 
